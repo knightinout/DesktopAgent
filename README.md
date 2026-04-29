@@ -1,5 +1,8 @@
 # 🤖 Desktop Agent
 
+# Video 
+https://youtu.be/uwGJwdlxXp4
+
 **AI-Powered Installation Assistant for Linux**
 
 An intelligent desktop assistant that automates software installation using Claude AI. Choose between a modern web interface or the original VNC desktop environment.
