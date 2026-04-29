@@ -26,7 +26,14 @@ docker run -d --rm \
     -v "$(pwd)/.env:/app/.env:ro" \
     desktop-agent-chatbot
 
-sleep 6
+# Wait for the server to be ready (it takes ~15-20 s to start Xvfb + XFCE + VNC + Python)
+echo "⏳ Waiting for server to be ready..."
+for i in $(seq 1 30); do
+    if curl -sf http://localhost:8000/api/health > /dev/null 2>&1; then
+        break
+    fi
+    sleep 2
+done
 
 echo ""
 echo "✅ Container started!"

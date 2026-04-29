@@ -1,0 +1,47 @@
+{
+  "id": "unique-task-id",
+  "name": "Descriptive Task Name",
+  "difficulty": "basic|intermediate|advanced",
+  "category": "installation|configuration|debugging|workflow",
+  "description": "Natural language task description that would be given to the agent",
+  "initial_state": {
+    "docker_image": "ubuntu:22.04",
+    "pre_install": [
+      "apt-get update",
+      "apt-get install -y sudo"
+    ],
+    "working_dir": "/workspace"
+  },
+  "task": {
+    "instructions": "Install Python 3.11 from source and verify it works",
+    "constraints": [
+      "Must compile from source, not use apt",
+      "Must be accessible as 'python3.11' command"
+    ]
+  },
+  "validation": {
+    "commands": [
+      "python3.11 --version",
+      "python3.11 -c 'print(\"Hello\")'"
+    ],
+    "expected_outputs": [
+      "Python 3.11",
+      "Hello"
+    ],
+    "files_must_exist": [
+      "/usr/local/bin/python3.11"
+    ],
+    "services_running": []
+  },
+  "metrics": {
+    "time_limit_seconds": 600,
+    "expected_commands_range": [5, 15],
+    "max_retries": 3
+  },
+  "metadata": {
+    "author": "Your Name",
+    "created": "2026-01-27",
+    "tags": ["python", "compilation", "source-install"],
+    "difficulty_justification": "Requires understanding of build dependencies and compilation process"
+  }
+}

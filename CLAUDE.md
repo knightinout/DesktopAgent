@@ -4,19 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Quick Start
 
-### Running the Chatbot (Recommended)
+### Recommended: Single entry-point
 ```bash
-# Modern web-based chat interface
-./start_chatbot.sh
+# Handles .env setup, detects Docker, and lets you pick a mode
+./start.sh
 # Access at http://localhost:8000
+```
+
+`start.sh` prompts for your API key on first run and auto-selects the best mode
+(Docker if available, local Python otherwise).
+
+### Running individual scripts directly
+```bash
+# Web chatbot + XFCE desktop in browser (Docker)
+./run-chatbot.sh
+
+# Web chatbot only, no Docker
+./run-local.sh
 
 # Requires .env file with:
 # CLAUDE_API_KEY=sk-ant-your-key-here
 ```
 
-### Running the Original GUI (Deprecated)
+### Running the Original GUI
 ```bash
-# Primary method - launches Docker with VNC auto-connect
+# Launches Docker with XFCE desktop + VNC auto-connect
 ./run.sh
 
 # Development mode (local testing)
@@ -87,7 +99,8 @@ WATCH_FOLDER=/tmp/test_files  # Used by file organizer (optional feature)
 
 ## Key Files to Know
 
-- `run.sh` - Main entry point, builds & launches Docker with VNC
+- `start.sh` - Primary entry-point with first-run setup and mode selection
+- `run.sh` - Classic Docker launcher (XFCE + VNC auto-connect)
 - `gui/app.py` - Simplified GUI (lines 31-115: UI setup, 153-192: installation logic)
 - `Dockerfile` - XFCE desktop environment with VNC server
 - `utils/guide_executor.py` - Core step execution engine

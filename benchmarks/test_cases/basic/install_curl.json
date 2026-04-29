@@ -1,0 +1,45 @@
+{
+  "id": "basic-001-install-curl",
+  "name": "Install curl",
+  "difficulty": "basic",
+  "category": "installation",
+  "description": "Install the curl command-line tool",
+  "initial_state": {
+    "docker_image": "ubuntu:22.04",
+    "pre_install": [
+      "apt-get update"
+    ],
+    "working_dir": "/workspace"
+  },
+  "task": {
+    "instructions": "Install curl and verify it works by fetching https://example.com",
+    "constraints": []
+  },
+  "validation": {
+    "commands": [
+      "which curl",
+      "curl --version",
+      "curl -s https://example.com | grep -q 'Example Domain'"
+    ],
+    "expected_outputs": [
+      "/usr/bin/curl",
+      "curl",
+      ""
+    ],
+    "files_must_exist": [
+      "/usr/bin/curl"
+    ],
+    "services_running": []
+  },
+  "metrics": {
+    "time_limit_seconds": 120,
+    "expected_commands_range": [1, 3],
+    "max_retries": 2
+  },
+  "metadata": {
+    "author": "DesktopAgent Team",
+    "created": "2026-01-27",
+    "tags": ["curl", "basic", "package-install"],
+    "difficulty_justification": "Single package install with package manager"
+  }
+}

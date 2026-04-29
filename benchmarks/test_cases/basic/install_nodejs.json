@@ -1,0 +1,49 @@
+{
+  "id": "basic-002-install-nodejs",
+  "name": "Install Node.js LTS",
+  "difficulty": "basic",
+  "category": "installation",
+  "description": "Install Node.js LTS version using NodeSource repository",
+  "initial_state": {
+    "docker_image": "ubuntu:22.04",
+    "pre_install": [
+      "apt-get update",
+      "apt-get install -y curl ca-certificates"
+    ],
+    "working_dir": "/workspace"
+  },
+  "task": {
+    "instructions": "Install Node.js LTS (version 20.x) and npm. Verify both work correctly.",
+    "constraints": [
+      "Use NodeSource repository for installation"
+    ]
+  },
+  "validation": {
+    "commands": [
+      "node --version",
+      "npm --version",
+      "node -e 'console.log(\"test\")'"
+    ],
+    "expected_outputs": [
+      "v20",
+      "",
+      "test"
+    ],
+    "files_must_exist": [
+      "/usr/bin/node",
+      "/usr/bin/npm"
+    ],
+    "services_running": []
+  },
+  "metrics": {
+    "time_limit_seconds": 300,
+    "expected_commands_range": [3, 6],
+    "max_retries": 2
+  },
+  "metadata": {
+    "author": "DesktopAgent Team",
+    "created": "2026-01-27",
+    "tags": ["nodejs", "npm", "repository-setup"],
+    "difficulty_justification": "Requires adding external repository before installation"
+  }
+}
