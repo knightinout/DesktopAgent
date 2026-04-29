@@ -1,0 +1,52 @@
+{
+  "id": "inter-001-setup-docker",
+  "name": "Install and Configure Docker",
+  "difficulty": "intermediate",
+  "category": "installation",
+  "description": "Install Docker Engine and verify it works",
+  "initial_state": {
+    "docker_image": "ubuntu:22.04",
+    "pre_install": [
+      "apt-get update",
+      "apt-get install -y ca-certificates curl sudo"
+    ],
+    "working_dir": "/workspace",
+    "privileged": true
+  },
+  "task": {
+    "instructions": "Install Docker Engine using the official Docker repository. Start the Docker service and verify it works by running 'hello-world' container.",
+    "constraints": [
+      "Must use official Docker repository, not snap",
+      "Docker service must be running",
+      "Must successfully run hello-world container"
+    ]
+  },
+  "validation": {
+    "commands": [
+      "docker --version",
+      "systemctl is-active docker || service docker status",
+      "docker run --rm hello-world | grep -q 'Hello from Docker'"
+    ],
+    "expected_outputs": [
+      "Docker version",
+      "",
+      ""
+    ],
+    "files_must_exist": [
+      "/usr/bin/docker",
+      "/etc/docker/daemon.json"
+    ],
+    "services_running": ["docker"]
+  },
+  "metrics": {
+    "time_limit_seconds": 600,
+    "expected_commands_range": [8, 15],
+    "max_retries": 2
+  },
+  "metadata": {
+    "author": "DesktopAgent Team",
+    "created": "2026-01-27",
+    "tags": ["docker", "service-management", "repository-setup"],
+    "difficulty_justification": "Multiple steps: add repo, install, start service, verify functionality"
+  }
+}

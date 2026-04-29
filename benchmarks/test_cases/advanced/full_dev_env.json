@@ -1,0 +1,75 @@
+{
+  "id": "adv-001-full-dev-environment",
+  "name": "Setup Complete Development Environment",
+  "difficulty": "advanced",
+  "category": "workflow",
+  "description": "Setup a full-stack development environment with multiple tools",
+  "initial_state": {
+    "docker_image": "ubuntu:22.04",
+    "pre_install": [
+      "apt-get update",
+      "apt-get install -y sudo curl ca-certificates"
+    ],
+    "working_dir": "/workspace"
+  },
+  "task": {
+    "instructions": "Setup a complete development environment including:\n1. Python 3.11 with pip and virtualenv\n2. Node.js 20.x with npm\n3. Git with global config (user.name='Test User', user.email='test@example.com')\n4. PostgreSQL 15 installed and running\n5. Redis installed and running\n6. Create a test project directory at /workspace/testproject\n7. Initialize a git repository in that directory\n8. Create a Python virtual environment in testproject/.venv\n9. Create a package.json with name='test-project'\n10. Verify all services are running and accessible",
+    "constraints": [
+      "All services must be running simultaneously",
+      "Python must be accessible as 'python3.11'",
+      "Virtual environment must be functional",
+      "PostgreSQL must accept connections",
+      "Redis must respond to PING"
+    ]
+  },
+  "validation": {
+    "commands": [
+      "python3.11 --version",
+      "node --version",
+      "git --version",
+      "git config --global user.name",
+      "systemctl is-active postgresql || service postgresql status",
+      "systemctl is-active redis || service redis status",
+      "sudo -u postgres psql -c 'SELECT 1' | grep -q '1 row'",
+      "redis-cli ping | grep -q 'PONG'",
+      "test -d /workspace/testproject/.git",
+      "test -f /workspace/testproject/.venv/bin/activate",
+      "test -f /workspace/testproject/package.json",
+      "cat /workspace/testproject/package.json | grep -q 'test-project'"
+    ],
+    "expected_outputs": [
+      "Python 3.11",
+      "v20",
+      "git version",
+      "Test User",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "files_must_exist": [
+      "/usr/bin/python3.11",
+      "/usr/bin/node",
+      "/usr/bin/git",
+      "/workspace/testproject/.git/config",
+      "/workspace/testproject/.venv/bin/python",
+      "/workspace/testproject/package.json"
+    ],
+    "services_running": ["postgresql", "redis"]
+  },
+  "metrics": {
+    "time_limit_seconds": 1800,
+    "expected_commands_range": [25, 50],
+    "max_retries": 3
+  },
+  "metadata": {
+    "author": "DesktopAgent Team",
+    "created": "2026-01-27",
+    "tags": ["python", "nodejs", "git", "postgresql", "redis", "full-stack"],
+    "difficulty_justification": "Complex multi-service setup requiring coordination and verification of multiple components"
+  }
+}
