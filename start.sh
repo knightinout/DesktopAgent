@@ -10,36 +10,59 @@ echo ""
 
 # ── 1. .env setup ─────────────────────────────────────────────────────────────
 
-NEEDS_KEY=false
+HAS_VALID_KEY=false
 
-if [ ! -f .env ]; then
-    NEEDS_KEY=true
-elif grep -q "your.*key.*here\|your_claude_api_key\|sk-ant-your" .env 2>/dev/null; then
-    NEEDS_KEY=true
-elif ! grep -q "CLAUDE_API_KEY=sk-ant-" .env 2>/dev/null; then
-    NEEDS_KEY=true
+if [ -f .env ]; then
+    if grep -qE "^CLAUDE_API_KEY=sk-ant-.{5}" .env 2>/dev/null; then
+        HAS_VALID_KEY=true
+    fi
+    if grep -qE "^GEMINI_API_KEY=.{10}" .env 2>/dev/null; then
+        HAS_VALID_KEY=true
+    fi
 fi
 
-if [ "$NEEDS_KEY" = "true" ]; then
-    echo "First-time setup: Claude API key required."
+if [ "$HAS_VALID_KEY" = "false" ]; then
+    echo "First-time setup: AI API key required."
     echo ""
-    echo "Get your key at: https://console.anthropic.com/"
+    echo "Which AI provider do you want to use?"
+    echo "  [1] Claude (Anthropic)  — https://console.anthropic.com/"
+    echo "  [2] Gemini (Google)     — https://aistudio.google.com/"
     echo ""
-    printf "Paste your CLAUDE_API_KEY (starts with sk-ant-): "
-    read -r API_KEY
+    printf "Provider [default: 1]: "
+    read -r PROVIDER_CHOICE
+    PROVIDER_CHOICE="${PROVIDER_CHOICE:-1}"
     echo ""
 
-    if [ -z "$API_KEY" ]; then
-        echo "No key entered. Exiting."
-        exit 1
+    # Preserve WATCH_FOLDER from existing .env if present
+    WATCH_LINE=""
+    if [ -f .env ]; then
+        WATCH_LINE=$(grep "^WATCH_FOLDER=" .env 2>/dev/null || true)
     fi
 
-    if [[ "$API_KEY" != sk-ant-* ]]; then
-        echo "Warning: key does not start with 'sk-ant-' — saving anyway."
+    if [ "$PROVIDER_CHOICE" = "2" ]; then
+        printf "Paste your GEMINI_API_KEY: "
+        read -r API_KEY
+        echo ""
+        if [ -z "$API_KEY" ]; then
+            echo "No key entered. Exiting."
+            exit 1
+        fi
+        { printf "AI_PROVIDER=gemini\nGEMINI_API_KEY=%s\n" "$API_KEY"; [ -n "$WATCH_LINE" ] && printf "%s\n" "$WATCH_LINE"; } > .env
+        echo "Gemini API key saved to .env"
+    else
+        printf "Paste your CLAUDE_API_KEY (starts with sk-ant-): "
+        read -r API_KEY
+        echo ""
+        if [ -z "$API_KEY" ]; then
+            echo "No key entered. Exiting."
+            exit 1
+        fi
+        if [[ "$API_KEY" != sk-ant-* ]]; then
+            echo "Warning: key does not start with 'sk-ant-' — saving anyway."
+        fi
+        { printf "AI_PROVIDER=claude\nCLAUDE_API_KEY=%s\n" "$API_KEY"; [ -n "$WATCH_LINE" ] && printf "%s\n" "$WATCH_LINE"; } > .env
+        echo "Claude API key saved to .env"
     fi
-
-    echo "CLAUDE_API_KEY=$API_KEY" > .env
-    echo "API key saved to .env"
     echo ""
 fi
 

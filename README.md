@@ -1,330 +1,210 @@
-# 🤖 Desktop Agent
+# Desktop Agent
 
-# Video 
-https://youtu.be/uwGJwdlxXp4
+**Chat with an AI to install software on Linux — just type what you want.**
 
-**AI-Powered Installation Assistant for Linux**
+> "Install Firefox" → the agent figures out the commands, runs them, and confirms it worked.
 
-An intelligent desktop assistant that automates software installation using Claude AI. Choose between a modern web interface or the original VNC desktop environment.
+Demo video: https://youtu.be/uwGJwdlxXp4
 
 ---
 
-## 🚀 Quick Start
+## What it does
 
-### **Recommended: One command to get started**
+You open a chat window in your browser, type something like *"Install GIMP image editor"* or *"Set up a Python development environment"*, and the AI handles the rest — finding the right package, running the install commands, checking for errors, and retrying automatically if something goes wrong.
+
+---
+
+## Before you start
+
+You need:
+
+- **An AI API key** (pick one — both have free tiers):
+  - **Gemini (Google):** https://aistudio.google.com/ — free, no billing required
+  - **Claude (Anthropic):** https://console.anthropic.com/ — free tier available
+- **Python 3.10 or newer** — check with `python3 --version`
+- **Docker** — only needed if you want to see a live desktop alongside the chat (optional)
+
+---
+
+## Getting started
+
+### Step 1 — Download the project
+
+```bash
+git clone https://github.com/knightinout/DesktopAgent.git
+cd DesktopAgent
+```
+
+### Step 2 — Run the launcher
 
 ```bash
 ./start.sh
 ```
 
-`start.sh` is the single entry-point that:
-- Prompts for your Claude API key on first run and saves it to `.env`
-- Detects whether Docker is available and auto-selects the best mode
-- Offers a simple menu so you can override the default
+On first run it will ask which AI provider you want to use and prompt you to paste your API key. It saves everything automatically. After that, just open your browser at:
 
 ```
-  [1] Web chatbot + XFCE desktop  (Docker) — chat + live desktop in browser
-  [2] Web chatbot only            (local Python, no Docker)
-  [3] Classic VNC desktop GUI     (Docker) — original tkinter interface
+http://localhost:8000
 ```
 
-Get your API key at: https://console.anthropic.com/
+Type a message like *"Install VLC"* and watch the agent work.
 
 ---
 
-### **Running scripts directly**
+## Running modes
 
-#### Web Chatbot + XFCE Desktop (Docker)
+The launcher (`./start.sh`) offers three modes. Here's what they actually mean:
 
-Modern web interface with AI chatbot and XFCE desktop side-by-side in the browser:
+| Mode | What you see | Requires Docker? |
+|------|-------------|-----------------|
+| **Web chat + live desktop** | Chat panel on the left, a full Linux desktop on the right — you can watch apps launch in real time | Yes |
+| **Web chat only** | Just the chat panel in your browser — the AI still installs things, you just don't see the desktop | No |
+| **Classic GUI** | A simple desktop app instead of a browser interface | Yes |
+
+**On Windows (WSL2) or a VM with no Docker?** Choose the "web chat only" mode — it works everywhere and needs nothing extra installed.
+
+---
+
+## Common commands
 
 ```bash
-# Requires .env with CLAUDE_API_KEY
-./run-chatbot.sh
-# http://localhost:8000
+# Start the agent (recommended — handles everything)
+./start.sh
+
+# Start web chat only, no Docker needed
+./run-local.sh
+
+# Stop the agent (if running in Docker)
+docker stop agent-chatbot
+
+# View logs if something seems stuck
+docker logs -f agent-chatbot
 ```
 
-**What you get:**
-- **Left panel**: AI chatbot to install apps
-- **Right panel**: XFCE desktop via noVNC — launch and test apps
-- **All in one browser window!**
+---
 
-#### Local Mode (no Docker — great for WSL2 / VMs)
+## API key setup
 
-Runs the AI chatbot directly on your machine. No Docker or desktop environment needed:
+### Option A — Gemini (Google)
+
+1. Go to https://aistudio.google.com/
+2. Sign in with a Google account
+3. Click **Get API key** → **Create API key**
+4. Copy the key and paste it when `./start.sh` asks
+
+### Option B — Claude (Anthropic)
+
+1. Go to https://console.anthropic.com/
+2. Create an account and go to **API Keys**
+3. Click **Create Key**, copy it (starts with `sk-ant-`)
+4. Paste it when `./start.sh` asks
+
+### Switching providers later
+
+Edit the `.env` file in the project folder:
+
+```bash
+# To use Gemini:
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your-key-here
+
+# To use Claude:
+AI_PROVIDER=claude
+CLAUDE_API_KEY=sk-ant-your-key-here
+```
+
+---
+
+## Troubleshooting
+
+### "No .env file" or "API key not found"
+
+Run `./start.sh` — it will create the file for you. Or create it manually:
+
+```bash
+# Gemini example
+echo "AI_PROVIDER=gemini" > .env
+echo "GEMINI_API_KEY=your-key-here" >> .env
+
+# Claude example
+echo "CLAUDE_API_KEY=sk-ant-your-key-here" > .env
+```
+
+---
+
+### Running on Windows (via WSL2)
+
+WSL2 is a way to run Linux inside Windows. If you're using it:
+
+**Easiest setup — web chat only, no Docker:**
+```bash
+./run-local.sh
+```
+Then open `http://localhost:8000` in your **Windows** browser. This works without any extra setup.
+
+**If you want Docker too:**
+- Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/) and enable the WSL2 backend in its settings
+- After that, `./start.sh` and `http://localhost:8000` work in your Windows browser automatically
+
+If `localhost` doesn't connect, find your WSL2 IP and use that instead:
+```bash
+ip addr show eth0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1
+# Then open http://<that-ip>:8000 in Windows browser
+```
+
+---
+
+### "Port 8000 is already in use"
+
+Something else is running on that port. Find and stop it:
+
+```bash
+# Find what's using port 8000
+lsof -i :8000
+
+# Stop it (replace <PID> with the number shown)
+kill <PID>
+```
+
+---
+
+### "Docker not found" or Docker errors
+
+If Docker isn't installed or not running, use the no-Docker mode instead:
 
 ```bash
 ./run-local.sh
-# http://localhost:8000
 ```
 
-#### Original VNC Desktop GUI (Docker)
+To install Docker on Ubuntu:
+```bash
+sudo apt install docker.io
+sudo usermod -aG docker $USER
+# Log out and back in, then try again
+```
 
-Classic tkinter GUI inside an XFCE desktop, accessed through a VNC viewer:
+---
+
+### The agent seems stuck or gave a wrong answer
+
+- Check the logs: `docker logs -f agent-chatbot`
+- Try rephrasing your request — be specific, e.g. *"Install the docker.io package using apt"* instead of just *"Install Docker"*
+- Restart: `docker stop agent-chatbot` then `./start.sh`
+
+---
+
+## Stopping the agent
 
 ```bash
-./run.sh
-# VNC viewer auto-connects to localhost:5901
-```
-
----
-
-## ✨ Features
-
-### Web Chatbot Interface
-- ✅ **Split-screen design** - Chat left, desktop right
-- ✅ **Web-based VNC** - No separate VNC client needed
-- ✅ **LangChain agent** - Autonomous reasoning and tool use
-- ✅ **Real-time viewing** - Watch apps install and launch
-- ✅ **Docker isolated** - Safe testing environment
-
-### Original Interface
-- ✅ **Classic GUI** - Tkinter-based desktop application
-- ✅ **Guide execution** - Parses installation text files
-- ✅ **VNC desktop** - Full XFCE environment
-- ✅ **Step-by-step** - Manual control over execution
-
----
-
-## 🛠️ Tech Stack
-
-- **AI**: Claude Sonnet-4 via Anthropic API
-- **Agent Framework**: LangChain (web interface)
-- **GUI**: Python tkinter + XFCE desktop (original)
-- **Web**: FastAPI + noVNC (web interface)
-- **Container**: Docker with VNC server
-- **Security**: Command validation & sandboxing
-
----
-
-## 📁 Project Structure
-
-```
-DesktopAgent/
-├── start.sh                  # ⭐ Primary entry-point (smart launcher)
-├── chatbot.py                # ⭐ Web chatbot interface
-├── Dockerfile.chatbot        # ⭐ Web chatbot Docker config
-├── run-chatbot.sh            # Web chatbot launcher (Docker + XFCE)
-├── run-local.sh              # Local Python launcher (no Docker)
-│
-├── agents/
-│   ├── desktop_agent.py      # LangChain agent (ReAct)
-│   ├── langchain_tools.py    # Agent tools
-│   ├── autonomous_mode.py    # Auto-execution
-│   └── file_organizer.py     # File categorization
-│
-├── utils/
-│   ├── guide_parser.py       # Installation guide parser
-│   ├── guide_executor.py     # Step execution engine
-│   ├── security.py           # Command validation
-│   └── claude_client.py      # Claude API client
-│
-├── gui/
-│   └── app.py                # Original GUI
-│
-├── Dockerfile                # Original desktop environment
-├── run.sh                    # Original launcher
-├── main.py                   # Original entry point
-└── requirements.txt          # Python dependencies
-```
-
----
-
-## 🎯 Usage Examples
-
-### Web Chatbot Interface
-
-1. **Open browser**: http://localhost:8000
-2. **Install apps** (left panel):
-   ```
-   Install GIMP image editor
-   Install Firefox browser
-   Install VLC media player
-   ```
-3. **Launch apps** (right panel - VNC):
-   ```bash
-   gimp &
-   firefox &
-   vlc &
-   ```
-
-### Original Interface
-
-1. **Load guide** in GUI text editor
-2. **Click** "▶ Start Installation"
-3. **Watch** in VNC window as apps install
-
----
-
-## 🔧 Configuration
-
-Create `.env` file:
-
-```bash
-# Required: Claude API key
-CLAUDE_API_KEY=sk-ant-your-key-here
-
-# Optional: File organizer watch folder
-WATCH_FOLDER=/tmp/test_files
-```
-
-Get API key: https://console.anthropic.com/
-
----
-
-## 🐳 Docker Commands
-
-### Web Chatbot Interface
-```bash
-# Start
-./run-chatbot.sh
-
-# Stop
+# If you started with run-chatbot.sh or start.sh (Docker mode)
 docker stop agent-chatbot
 
-# Logs
-docker logs -f agent-chatbot
-
-# Access
-http://localhost:8000        # Web interface
-http://localhost:6080        # Direct noVNC access
-```
-
-### Original Interface
-```bash
-# Start
-./run.sh
-
-# Stop
-docker stop desktop-agent-running
-
-# Logs
-docker logs -f desktop-agent-running
-
-# VNC
-vncviewer localhost:5901
+# If you started with run-local.sh
+Press Ctrl-C in the terminal
 ```
 
 ---
 
-## 📝 Example Workflow (Web Chatbot)
-
-**In Browser (Chatbot):**
-```
-You: "Setup Python development environment"
-Agent: [Analyzes request]
-       [Updates apt packages]
-       [Installs python3, pip, venv, git]
-       [Verifies installations]
-       ✅ Environment ready!
-```
-
-**In VNC Panel:**
-```bash
-# Test what was installed
-python3 --version
-pip3 --version
-git --version
-```
-
----
-
-## 🔒 Security
-
-Multiple security layers:
-- ✅ **Command whitelist** - Only approved commands
-- ✅ **Pattern blocking** - Blocks dangerous patterns (rm -rf /, etc.)
-- ✅ **Docker isolation** - Contained environment
-- ✅ **Input validation** - Sanitized command inputs
-- ✅ **Comprehensive logging** - Full audit trail
-
-See `utils/security.py` and `SECURITY.md` for details.
-
----
-
-## 🚧 Requirements
-
-- **Python** 3.10+
-- **Claude API Key**
-- **Docker** 20.10+ *(only for the Docker modes — not needed for `run-local.sh`)*
-- **VNC Viewer** *(only for the original `run.sh` mode)*: `tigervnc-viewer` or `remmina`
-
-**Install VNC viewer (optional, original interface only):**
-```bash
-sudo apt install tigervnc-viewer
-```
-
----
-
-## 🐧 WSL2 / Linux VM Notes
-
-Running inside **WSL2** or a **headless Linux VM**? Use the local mode — no Docker required:
-
-```bash
-./run-local.sh        # chatbot only, no desktop environment
-```
-
-If you do want the full Docker + VNC experience on WSL2:
-
-1. **Docker Desktop (recommended)** — enable the WSL2 backend in Docker Desktop settings on Windows.
-   Ports are automatically forwarded, so `http://localhost:8000` works in the Windows browser.
-
-2. **Docker Engine in WSL2** — install normally with `apt`; port forwarding usually works, but if
-   `localhost` doesn't resolve add the WSL2 IP to your Windows hosts file or use:
-   ```bash
-   # Get your WSL2 IP
-   ip addr show eth0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1
-   # Then open http://<that-ip>:8000 in Windows browser
-   ```
-
-3. **The VNC desktop panel** (`run-chatbot.sh`) renders inside the browser via noVNC — no separate
-   VNC client is needed. The panel connects to `http://localhost:6080` as seen from the browser
-   (your Windows machine), which works automatically when using Docker Desktop.
-
-4. **`run.sh` (original mode)** auto-launches `vncviewer` — this will fail on WSL2/headless
-   systems since there is no local display server. Install a Windows VNC client instead and
-   connect to `localhost:5901` from Windows, or use `run-chatbot.sh` which uses browser-based VNC.
-
----
-
-## 📚 Documentation
-
-- `CLAUDE.md` - Instructions for Claude Code
-- `SECURITY.md` - Security architecture
-- `TODO.md` - Development roadmap
-- `desktop_agent_complete_architecture.md` - Technical details
-
----
-
-## 🤝 Contributing
-
-This is an AI-assisted development project. Key components:
-
-1. **Agent**: LangChain-based autonomous agent with tool calling
-2. **Tools**: Shell execution, package management, system info
-3. **Interface**: Web-based chatbot + embedded VNC viewer
-4. **Safety**: Command validation, Docker isolation
-
----
-
-## 📄 License
+## License
 
 See `LICENSE` file.
-
----
-
-## 🎉 Features Comparison
-
-| Feature | Web Chatbot | Original GUI |
-|---------|-------------|--------------|
-| UI | Web browser | VNC desktop |
-| Chatbot | LangChain agent | Guide parser |
-| Viewing | In-browser | Separate VNC client |
-| Control | Natural language | Text guides |
-| Best for | Interactive use | Batch installations |
-
----
-
-**Built with Claude Sonnet-4 + LangChain + Docker**
-
-*Modern AI-powered desktop automation*

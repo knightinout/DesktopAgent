@@ -4,7 +4,6 @@ Autonomous agent that can install and configure software using tools
 """
 import os
 from typing import List, Dict, Any, Optional
-from langchain_anthropic import ChatAnthropic
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
@@ -14,6 +13,23 @@ from .langchain_tools import ALL_TOOLS
 
 # Load environment variables
 load_dotenv()
+
+
+def _get_provider() -> str:
+    """Determine which AI provider to use based on environment variables."""
+    provider = os.environ.get("AI_PROVIDER", "").lower()
+    if not provider:
+        if os.environ.get("CLAUDE_API_KEY"):
+            provider = "claude"
+        elif os.environ.get("GEMINI_API_KEY"):
+            provider = "gemini"
+        else:
+            provider = "claude"
+    return provider
+
+
+def _default_model(provider: str) -> str:
+    return "gemini-1.5-pro" if provider == "gemini" else "claude-sonnet-4-20250514"
 
 
 class DesktopAgent:
@@ -30,7 +46,7 @@ class DesktopAgent:
 
     def __init__(
         self,
-        model: str = "claude-sonnet-4-20250514",
+        model: str = None,
         temperature: float = 0.1,
         max_iterations: int = 15,
         verbose: bool = True
@@ -39,26 +55,44 @@ class DesktopAgent:
         Initialize the Desktop Agent.
 
         Args:
-            model: Claude model to use
+            model: Model to use (defaults to provider-appropriate model)
             temperature: LLM temperature (lower = more focused)
             max_iterations: Maximum tool calls before stopping
             verbose: Whether to show detailed execution logs
         """
-        # Validate API key
-        api_key = os.environ.get("CLAUDE_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "CLAUDE_API_KEY not found. Please create a .env file with:\n"
-                "CLAUDE_API_KEY=sk-ant-your-key-here"
-            )
+        provider = _get_provider()
+        if model is None:
+            model = _default_model(provider)
 
-        # Initialize Claude LLM via LangChain
-        self.llm = ChatAnthropic(
-            model=model,
-            temperature=temperature,
-            api_key=api_key,
-            max_tokens=4096
-        )
+        if provider == "gemini":
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "GEMINI_API_KEY not found. Please create a .env file with:\n"
+                    "GEMINI_API_KEY=your-gemini-key-here\n"
+                    "AI_PROVIDER=gemini"
+                )
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            self.llm = ChatGoogleGenerativeAI(
+                model=model,
+                temperature=temperature,
+                google_api_key=api_key,
+                max_output_tokens=4096
+            )
+        else:
+            api_key = os.environ.get("CLAUDE_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "CLAUDE_API_KEY not found. Please create a .env file with:\n"
+                    "CLAUDE_API_KEY=sk-ant-your-key-here"
+                )
+            from langchain_anthropic import ChatAnthropic
+            self.llm = ChatAnthropic(
+                model=model,
+                temperature=temperature,
+                api_key=api_key,
+                max_tokens=4096
+            )
 
         # Create agent prompt
         self.prompt = self._create_prompt()
@@ -327,7 +361,7 @@ Remember: You are autonomous AND persistent - use tools proactively, especially 
 
 # Factory function for easy creation
 def create_desktop_agent(
-    model: str = "claude-sonnet-4-20250514",
+    model: str = None,
     temperature: float = 0.1,
     verbose: bool = True
 ) -> DesktopAgent:
@@ -335,7 +369,7 @@ def create_desktop_agent(
     Create a Desktop Agent instance.
 
     Args:
-        model: Claude model to use
+        model: Model to use (defaults to provider-appropriate model)
         temperature: LLM temperature
         verbose: Show execution logs
 

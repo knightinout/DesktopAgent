@@ -35,10 +35,10 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/gulerianitin/DesktopAgent"
-Repository = "https://github.com/gulerianitin/DesktopAgent" 
-Issues = "https://github.com/gulerianitin/DesktopAgent/issues"
-Documentation = "https://github.com/gulerianitin/DesktopAgent#readme"
+Homepage = "https://github.com/knightinout/DesktopAgent"
+Repository = "https://github.com/knightinout/DesktopAgent" 
+Issues = "https://github.com/knightinout/DesktopAgent/issues"
+Documentation = "https://github.com/knightinout/DesktopAgent#readme"
 
 [project.scripts]
 desktop-agent = "main:main"

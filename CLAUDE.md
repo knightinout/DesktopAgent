@@ -22,8 +22,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Web chatbot only, no Docker
 ./run-local.sh
 
-# Requires .env file with:
+# Requires .env file with one of:
 # CLAUDE_API_KEY=sk-ant-your-key-here
+# — or —
+# AI_PROVIDER=gemini
+# GEMINI_API_KEY=your-gemini-key-here
 ```
 
 ### Running the Original GUI
@@ -87,12 +90,16 @@ Simple, focused architecture for AI-powered installation automation:
 
 ### Environment Variables (.env)
 ```bash
+# Choose one provider (auto-detected if omitted):
+AI_PROVIDER=claude          # or: gemini
 CLAUDE_API_KEY=your_claude_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+
 WATCH_FOLDER=/tmp/test_files  # Used by file organizer (optional feature)
 ```
 
 ### Key Dependencies
-- **AI**: anthropic (Claude API)
+- **AI**: anthropic (Claude API) or google-generativeai (Gemini)
 - **GUI**: tkinter (built-in Python)
 - **Desktop**: XFCE4 + TigerVNC server (in Docker)
 - **Security**: Custom command validator

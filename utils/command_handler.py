@@ -31,7 +31,7 @@ Shell command:"""
 
             shell_command = self.claude_client.call(prompt, sanitize=False)
             if not shell_command:
-                return "Error: Could not interpret command - Claude API may have failed"
+                return "Error: Could not interpret command - AI API call failed"
             
             # Clean the response
             shell_command = shell_command.strip().replace('```', '').replace('bash', '').strip()

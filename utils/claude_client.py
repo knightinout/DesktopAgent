@@ -1,61 +1,96 @@
 import os
 import re
 from typing import Optional
-from anthropic import Anthropic
 from dotenv import load_dotenv
 
 load_dotenv()
 
-class ClaudeClient:
+
+def _get_provider() -> str:
+    """Determine which AI provider to use based on environment variables."""
+    provider = os.getenv("AI_PROVIDER", "").lower()
+    if not provider:
+        if os.getenv("CLAUDE_API_KEY"):
+            provider = "claude"
+        elif os.getenv("GEMINI_API_KEY"):
+            provider = "gemini"
+        else:
+            provider = "claude"
+    return provider
+
+
+class AIClient:
     def __init__(self):
-        api_key = os.getenv("CLAUDE_API_KEY")
-        if not api_key or len(api_key.strip()) < 10:
-            raise ValueError("Valid CLAUDE_API_KEY required in .env")
-        
-        try:
-            self.client = Anthropic(api_key=api_key.strip())
-        except Exception as e:
-            raise ValueError(f"Failed to initialize Claude client: {e}")
-    
+        self.provider = _get_provider()
+
+        if self.provider == "gemini":
+            api_key = os.getenv("GEMINI_API_KEY")
+            if not api_key or len(api_key.strip()) < 10:
+                raise ValueError("Valid GEMINI_API_KEY required in .env")
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=api_key.strip())
+                self._gemini_model = genai.GenerativeModel(
+                    "gemini-1.5-pro",
+                    generation_config=genai.GenerationConfig(
+                        max_output_tokens=300,
+                        temperature=0.1
+                    )
+                )
+            except Exception as e:
+                raise ValueError(f"Failed to initialize Gemini client: {e}")
+        else:
+            api_key = os.getenv("CLAUDE_API_KEY")
+            if not api_key or len(api_key.strip()) < 10:
+                raise ValueError("Valid CLAUDE_API_KEY required in .env")
+            try:
+                from anthropic import Anthropic
+                self._claude_client = Anthropic(api_key=api_key.strip())
+            except Exception as e:
+                raise ValueError(f"Failed to initialize Claude client: {e}")
+
     def call(self, prompt: str, sanitize: bool = True) -> Optional[str]:
         if not prompt or len(prompt.strip()) == 0:
             return None
-            
+
         try:
-            message = self.client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=300,
-                temperature=0.1,
-                messages=[{"role": "user", "content": prompt.strip()}]
-            )
-            
-            response = message.content[0].text
-            if sanitize:
-                return self._sanitize_response(response)
+            if self.provider == "gemini":
+                response = self._gemini_model.generate_content(prompt.strip())
+                text = response.text
             else:
-                return response.strip()
-            
+                message = self._claude_client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=300,
+                    temperature=0.1,
+                    messages=[{"role": "user", "content": prompt.strip()}]
+                )
+                text = message.content[0].text
+
+            if sanitize:
+                return self._sanitize_response(text)
+            else:
+                return text.strip()
+
         except Exception as e:
-            print(f"Claude API error: {e}")
+            print(f"AI API error ({self.provider}): {e}")
             return None
-    
+
     def _sanitize_response(self, response: str) -> str:
-        """Sanitize Claude response to prevent path traversal attacks"""
+        """Sanitize AI response to prevent path traversal attacks."""
         if not response:
             return ""
-        
+
         lines = []
         for line in response.strip().split('\n'):
-            # Handle both '->' and '-' formats
             if '->' in line or (' - ' in line and not line.strip().startswith('-')):
-                # Convert single dash to arrow format
                 if ' - ' in line and '->' not in line:
                     line = line.replace(' - ', ' -> ')
-                
-                # Remove dangerous path characters
                 clean_line = re.sub(r'[.]{2,}|[<>:"|?*]', '', line)
-                # Ensure no absolute paths  
                 clean_line = re.sub(r'^[/\\]', '', clean_line)
                 lines.append(clean_line)
-        
+
         return '\n'.join(lines)
+
+
+# Backward compatibility alias
+ClaudeClient = AIClient

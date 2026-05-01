@@ -50,7 +50,7 @@ if [ -d ".git" ]; then
     cp -r . "$APP_DIR/"
 else
     echo "📋 Cloning from GitHub..."
-    git clone https://github.com/gulerianitin/DesktopAgent.git "$APP_DIR"
+    git clone https://github.com/knightinout/DesktopAgent.git "$APP_DIR"
 fi
 
 cd "$APP_DIR"
@@ -91,14 +91,21 @@ echo "⚙️ Setting up configuration..."
 if [ ! -f "$APP_DIR/.env" ]; then
     cat > "$APP_DIR/.env" << EOF
 # Desktop Agent Configuration
-CLAUDE_API_KEY=your_claude_api_key_here
-WATCH_FOLDER=$HOME/Downloads
+# Choose provider: claude (default) or gemini
+AI_PROVIDER=claude
 
-# Optional: Set log level (DEBUG, INFO, WARNING, ERROR)
+# Claude (Anthropic) key — https://console.anthropic.com/
+CLAUDE_API_KEY=your_claude_api_key_here
+
+# Gemini (Google) key — https://aistudio.google.com/ (free tier)
+# Set AI_PROVIDER=gemini above to use Gemini instead.
+GEMINI_API_KEY=your_gemini_api_key_here
+
+WATCH_FOLDER=$HOME/Downloads
 LOG_LEVEL=INFO
 EOF
     echo "📝 Created .env template at $APP_DIR/.env"
-    echo "📝 Please edit $APP_DIR/.env and add your Claude API key"
+    echo "📝 Please edit $APP_DIR/.env and add your Claude or Gemini API key"
 fi
 
 # Create launcher script
@@ -117,11 +124,11 @@ echo ""
 echo "✅ Desktop Agent installation complete!"
 echo ""
 echo "📋 Next steps:"
-echo "1. Edit $APP_DIR/.env and add your Claude API key"
+echo "1. Edit $APP_DIR/.env and add your Claude or Gemini API key"
 echo "2. Log out and log back in (for Docker group membership)"
 echo "3. Launch from applications menu or run: desktop-agent"
 echo ""
 echo "🐳 Docker sandbox testing:"
 echo "   docker run -it --rm -e DISPLAY=\$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix ubuntu:latest"
 echo ""
-echo "📚 Documentation: https://github.com/gulerianitin/DesktopAgent#readme"
+echo "📚 Documentation: https://github.com/knightinout/DesktopAgent#readme"

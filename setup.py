@@ -24,7 +24,7 @@ setup(
     description="AI-powered Linux desktop assistant for file organization and system automation",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/gulerianitin/DesktopAgent",
+    url="https://github.com/knightinout/DesktopAgent",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -54,8 +54,8 @@ setup(
     },
     keywords="ai assistant desktop linux automation file-organizer xfce ubuntu",
     project_urls={
-        "Bug Reports": "https://github.com/gulerianitin/DesktopAgent/issues",
-        "Source": "https://github.com/gulerianitin/DesktopAgent",
-        "Documentation": "https://github.com/gulerianitin/DesktopAgent#readme",
+        "Bug Reports": "https://github.com/knightinout/DesktopAgent/issues",
+        "Source": "https://github.com/knightinout/DesktopAgent",
+        "Documentation": "https://github.com/knightinout/DesktopAgent#readme",
     },
 )

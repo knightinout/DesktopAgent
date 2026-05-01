@@ -5,7 +5,6 @@ Self-healing capabilities for installation failures
 from typing import Optional, List, Dict
 from langchain_core.tools import tool
 from utils.security import SecureCommandExecutor, SecurityError
-from langchain_anthropic import ChatAnthropic
 import os
 import json
 import re
@@ -17,22 +16,43 @@ secure_executor = SecureCommandExecutor(
     allowed_sudo=True
 )
 
-# Helper function to get Claude LLM (lazy initialization)
+# Helper function to get LLM (lazy initialization, supports Claude and Gemini)
 def _get_llm():
-    """Get Claude LLM instance with API key from environment."""
+    """Get LLM instance based on AI_PROVIDER environment variable."""
     from dotenv import load_dotenv
     load_dotenv()
 
-    api_key = os.environ.get("CLAUDE_API_KEY")
-    if not api_key:
-        raise ValueError("CLAUDE_API_KEY not found in environment")
+    provider = os.environ.get("AI_PROVIDER", "").lower()
+    if not provider:
+        if os.environ.get("CLAUDE_API_KEY"):
+            provider = "claude"
+        elif os.environ.get("GEMINI_API_KEY"):
+            provider = "gemini"
+        else:
+            provider = "claude"
 
-    return ChatAnthropic(
-        model="claude-sonnet-4-20250514",
-        temperature=0.0,
-        api_key=api_key,
-        max_tokens=2048
-    )
+    if provider == "gemini":
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not found in environment")
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model="gemini-1.5-pro",
+            temperature=0.0,
+            google_api_key=api_key,
+            max_output_tokens=2048
+        )
+    else:
+        api_key = os.environ.get("CLAUDE_API_KEY")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY not found in environment")
+        from langchain_anthropic import ChatAnthropic
+        return ChatAnthropic(
+            model="claude-sonnet-4-20250514",
+            temperature=0.0,
+            api_key=api_key,
+            max_tokens=2048
+        )
 
 
 @tool

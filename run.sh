@@ -12,13 +12,14 @@ echo ""
 if [ ! -f .env ]; then
     echo "❌ .env file not found!"
     echo ""
-    echo "Please create .env with your CLAUDE_API_KEY:"
-    echo "  echo 'CLAUDE_API_KEY=your_key_here' > .env"
+    echo "Please create .env with your API key:"
+    echo "  Claude: echo 'CLAUDE_API_KEY=sk-ant-your-key-here' > .env"
+    echo "  Gemini: printf 'AI_PROVIDER=gemini\nGEMINI_API_KEY=your-key\n' > .env"
     exit 1
 fi
 
 if grep -q "your.*key.*here" .env 2>/dev/null; then
-    echo "❌ Please set your real CLAUDE_API_KEY in .env file"
+    echo "❌ Please replace the placeholder in .env with your real API key."
     exit 1
 fi
 
