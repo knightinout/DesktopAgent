@@ -28,14 +28,12 @@ class AIClient:
             if not api_key or len(api_key.strip()) < 10:
                 raise ValueError("Valid GEMINI_API_KEY required in .env")
             try:
-                import google.generativeai as genai
-                genai.configure(api_key=api_key.strip())
-                self._gemini_model = genai.GenerativeModel(
-                    "gemini-1.5-pro",
-                    generation_config=genai.GenerationConfig(
-                        max_output_tokens=300,
-                        temperature=0.1
-                    )
+                from google import genai
+                from google.genai import types
+                self._gemini_client = genai.Client(api_key=api_key.strip())
+                self._gemini_config = types.GenerateContentConfig(
+                    max_output_tokens=300,
+                    temperature=0.1
                 )
             except Exception as e:
                 raise ValueError(f"Failed to initialize Gemini client: {e}")
@@ -55,7 +53,11 @@ class AIClient:
 
         try:
             if self.provider == "gemini":
-                response = self._gemini_model.generate_content(prompt.strip())
+                response = self._gemini_client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt.strip(),
+                    config=self._gemini_config
+                )
                 text = response.text
             else:
                 message = self._claude_client.messages.create(

@@ -29,7 +29,7 @@ def _get_provider() -> str:
 
 
 def _default_model(provider: str) -> str:
-    return "gemini-1.5-pro" if provider == "gemini" else "claude-sonnet-4-20250514"
+    return "gemini-2.5-flash" if provider == "gemini" else "claude-sonnet-4-20250514"
 
 
 class DesktopAgent:

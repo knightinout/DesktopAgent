@@ -10,63 +10,80 @@ echo ""
 
 # ── 1. .env setup ─────────────────────────────────────────────────────────────
 
-HAS_VALID_KEY=false
+HAS_CLAUDE=false
+HAS_GEMINI=false
 
 if [ -f .env ]; then
-    if grep -qE "^CLAUDE_API_KEY=sk-ant-.{5}" .env 2>/dev/null; then
-        HAS_VALID_KEY=true
-    fi
-    if grep -qE "^GEMINI_API_KEY=.{10}" .env 2>/dev/null; then
-        HAS_VALID_KEY=true
-    fi
+    grep -qE "^CLAUDE_API_KEY=sk-ant-.{5}" .env 2>/dev/null && HAS_CLAUDE=true
+    grep -qE "^GEMINI_API_KEY=.{10}"        .env 2>/dev/null && HAS_GEMINI=true
 fi
 
-if [ "$HAS_VALID_KEY" = "false" ]; then
-    echo "First-time setup: AI API key required."
+if [ "$HAS_CLAUDE" = "false" ] && [ "$HAS_GEMINI" = "false" ]; then
+    # ── No keys found: first-run setup ──────────────────────────────────────
+    echo "No API key found. Let's set one up."
     echo ""
     echo "Which AI provider do you want to use?"
     echo "  [1] Claude (Anthropic)  — https://console.anthropic.com/"
-    echo "  [2] Gemini (Google)     — https://aistudio.google.com/"
+    echo "  [2] Gemini (Google)     — https://aistudio.google.com/ (free tier)"
     echo ""
     printf "Provider [default: 1]: "
     read -r PROVIDER_CHOICE
     PROVIDER_CHOICE="${PROVIDER_CHOICE:-1}"
     echo ""
 
-    # Preserve WATCH_FOLDER from existing .env if present
     WATCH_LINE=""
-    if [ -f .env ]; then
-        WATCH_LINE=$(grep "^WATCH_FOLDER=" .env 2>/dev/null || true)
-    fi
+    [ -f .env ] && WATCH_LINE=$(grep "^WATCH_FOLDER=" .env 2>/dev/null || true)
 
     if [ "$PROVIDER_CHOICE" = "2" ]; then
         printf "Paste your GEMINI_API_KEY: "
         read -r API_KEY
         echo ""
-        if [ -z "$API_KEY" ]; then
-            echo "No key entered. Exiting."
-            exit 1
-        fi
-        { printf "AI_PROVIDER=gemini\nGEMINI_API_KEY=%s\n" "$API_KEY"; [ -n "$WATCH_LINE" ] && printf "%s\n" "$WATCH_LINE"; } > .env
+        [ -z "$API_KEY" ] && echo "No key entered. Exiting." && exit 1
+        { printf "AI_PROVIDER=gemini\nGEMINI_API_KEY=%s\n" "$API_KEY"
+          [ -n "$WATCH_LINE" ] && printf "%s\n" "$WATCH_LINE"; } > .env
         echo "Gemini API key saved to .env"
+        ACTIVE_PROVIDER="gemini"
     else
         printf "Paste your CLAUDE_API_KEY (starts with sk-ant-): "
         read -r API_KEY
         echo ""
-        if [ -z "$API_KEY" ]; then
-            echo "No key entered. Exiting."
-            exit 1
-        fi
-        if [[ "$API_KEY" != sk-ant-* ]]; then
-            echo "Warning: key does not start with 'sk-ant-' — saving anyway."
-        fi
-        { printf "AI_PROVIDER=claude\nCLAUDE_API_KEY=%s\n" "$API_KEY"; [ -n "$WATCH_LINE" ] && printf "%s\n" "$WATCH_LINE"; } > .env
+        [ -z "$API_KEY" ] && echo "No key entered. Exiting." && exit 1
+        [[ "$API_KEY" != sk-ant-* ]] && echo "Warning: key does not start with 'sk-ant-' — saving anyway."
+        { printf "AI_PROVIDER=claude\nCLAUDE_API_KEY=%s\n" "$API_KEY"
+          [ -n "$WATCH_LINE" ] && printf "%s\n" "$WATCH_LINE"; } > .env
         echo "Claude API key saved to .env"
+        ACTIVE_PROVIDER="claude"
     fi
     echo ""
+
+elif [ "$HAS_CLAUDE" = "true" ] && [ "$HAS_GEMINI" = "true" ]; then
+    # ── Both keys present: ask which one to use ──────────────────────────────
+    CURRENT=$(grep "^AI_PROVIDER=" .env 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
+    [ "$CURRENT" = "gemini" ] && DEFAULT_P=2 || DEFAULT_P=1
+
+    echo "Both Claude and Gemini keys found in .env."
+    echo "  [1] Claude (Anthropic)"
+    echo "  [2] Gemini (Google)"
+    echo ""
+    printf "Which provider? [default: %d]: " "$DEFAULT_P"
+    read -r PROVIDER_CHOICE
+    PROVIDER_CHOICE="${PROVIDER_CHOICE:-$DEFAULT_P}"
+    echo ""
+
+    if [ "$PROVIDER_CHOICE" = "2" ]; then
+        sed -i 's/^AI_PROVIDER=.*/AI_PROVIDER=gemini/' .env || echo "AI_PROVIDER=gemini" >> .env
+        ACTIVE_PROVIDER="gemini"
+    else
+        sed -i 's/^AI_PROVIDER=.*/AI_PROVIDER=claude/' .env || echo "AI_PROVIDER=claude" >> .env
+        ACTIVE_PROVIDER="claude"
+    fi
+
+else
+    # ── Exactly one key: use it automatically ────────────────────────────────
+    [ "$HAS_GEMINI" = "true" ] && ACTIVE_PROVIDER="gemini" || ACTIVE_PROVIDER="claude"
 fi
 
-echo "API key: OK"
+echo "AI provider: $ACTIVE_PROVIDER — OK"
 echo ""
 
 # ── 2. Detect Docker ───────────────────────────────────────────────────────────

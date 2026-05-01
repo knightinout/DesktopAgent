@@ -99,19 +99,23 @@ docker logs -f agent-chatbot
 3. Click **Create Key**, copy it (starts with `sk-ant-`)
 4. Paste it when `./start.sh` asks
 
-### Switching providers later
+### Adding keys directly to `.env`
 
-Edit the `.env` file in the project folder:
+You can skip the interactive setup entirely by editing `.env` yourself. Create or edit it in the project folder:
 
 ```bash
-# To use Gemini:
-AI_PROVIDER=gemini
-GEMINI_API_KEY=your-key-here
-
-# To use Claude:
-AI_PROVIDER=claude
+# Both keys can live in the same file
 CLAUDE_API_KEY=sk-ant-your-key-here
+GEMINI_API_KEY=your-gemini-key-here
+
+# Set which one to use (optional — if only one key is present it's used automatically)
+AI_PROVIDER=gemini
 ```
+
+When you run `./start.sh`:
+- **One key in `.env`** → used automatically, no questions asked
+- **Both keys in `.env`** → you're asked which provider to use that session
+- **No keys** → guided setup prompts you to paste one
 
 ---
 
